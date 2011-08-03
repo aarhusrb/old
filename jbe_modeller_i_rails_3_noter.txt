@@ -1,0 +1,103 @@
+Install Rails 3
+ sudo gem install tzinfo builder i18n memcache-client rack rake rack-test rack-mount erubis mail text-format thor bundler
+ sudo gem install rails --prerelease
+
+Create a new Rails app
+ rails -d mysql new_model
+ cd new_model
+ rails generate model Post title:string body:text published:boolean
+ rails generate model Comment body:text post_id:integer
+ rake db:create
+ rake db:migrate
+ rails server
+
+New modules extracted from ActiveRecord
+ ActiveModel
+   Validation ie.
+     include ActiveModel::Validations
+     validates_presence_of :first_name, :last_name
+     attr_accessor :first_name, :last_name
+
+   Serialisering
+     include ActiveModel::Serialization
+     lav atttributes-metode, der returnerer array
+
+   Callbacks
+   Observing: ActiveRecord-style observers
+
+   AttributeMethods: Makes it easy to add attributes that are set like table_name :foo
+   Callbacks: ActiveRecord-style lifecycle callbacks.
+
+   Dirty: Support for dirty tracking
+
+   Naming: Default implementations of model.model_name, which are used by ActionPack (for instance, when you do render :partial => model
+
+   Translation: The core translation support
+
+New ActiveRecord query interface in Rails 3
+ published = Post.where(:published => true)
+
+ where
+ having
+ select
+ group
+ order
+ limit
+ offset
+ joins
+ includes (:include)
+ lock
+ readonly
+ from
+
+ Lazy loading
+
+ Operations on relation
+   published.new
+
+   new(attributes)
+   create(attributes)
+   create!(attributes)
+   find(id_or_array)
+   destroy(id_or_array)
+   destroy_all
+   delete(id_or_array)
+   delete_all
+   update(ids, updates)
+   update_all(updates)
+   exists?
+
+ scopes
+   scope :published, where(:published => true)
+   Reuse of scopes
+   scope :published_since, lambda { |ago| published.where('created_at >= ?', ago) }
+
+   Post.published_since(2.days.ago).all
+
+ SQL
+   Post.published_since(2.days.ago).to_sql
+   puts  (Post.published & Post.where(:created_at => Date.today)).to_sql
+
+ Reuse scopes across classes
+   class Post < ActiveRecord::Base
+
+     scope :published, lambda {
+       where("posts.published_at IS NOT NULL AND posts.published_at <= ?", Time.zone.now)
+     }
+   end
+
+ class User < ActiveRecord::Base
+
+   scope :published, lambda {
+     joins(:posts).
+     where("posts.published_at IS NOT NULL AND posts.published_at <= ?", Time.zone.now).
+     group("users.id")
+   }
+ end
+
+ class User < ActiveRecord::Base
+
+   scope :published, lambda {
+     joins(:posts).group("users.id") & Post.published
+   }
+ end
